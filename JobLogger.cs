@@ -20,8 +20,6 @@ namespace examTest1
         private static bool _logWarning;
         private static bool _logError;
         private static bool _logToDatabase;
-        private bool _initialized;
-
         #endregion
 
         
