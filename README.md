@@ -9,7 +9,7 @@ The code is used to log different messages throughout an application. We want th
 2) Rewrite the code based on the feedback you provided in question 1. Please include unit tests on your code.
 
 
-# CODE
+# Code
 
     using System;
 	using System.Linq;
