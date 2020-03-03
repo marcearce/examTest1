@@ -11,7 +11,7 @@ using NpgsqlTypes;
 
 namespace examTest1
 {
-    class JobLogger
+    public class JobLogger
     {
         #region Attributos y Propiedades
         private static bool _logToFile;
@@ -37,16 +37,17 @@ namespace examTest1
                 _logToConsole = logToConsole;
                 if (!_logToConsole && !_logToFile && !_logToDatabase)
                 {
-                    throw new Exception("Configuración inválida");
+                    throw new Exception("Invalid Configuration");
                 }
                 if (!_logError && !_logMessage && !_logWarning)
                 {
-                    throw new Exception("Debe Especificar el algun tipo de mensaje");
+                    throw new Exception("Message Type not defined");
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
 
             
@@ -55,10 +56,10 @@ namespace examTest1
         {
             try
             {
-                messageText.Trim();
-                if (messageText == null || messageText.Length == 0)
+                if (messageText == null || messageText.Trim().Length == 0)
                 {
-                    throw new Exception("El mensaje no puede estar vacio.");
+                    //no puede dejar el mensaje vacio 
+                    throw new Exception("Messsage can not be empty");
                 }
 
                 bool[] types = { message, warning, error };
@@ -66,32 +67,40 @@ namespace examTest1
                 int typeMessage = 0;
                 for (int i = 0; i < types.Count(); i++)
                 {
+                    //detectar si hay un tipo establecido como True
                     if (types[i] == true)
                     {
                         trueFound++;
                         typeMessage = (i+1);
                     }
-
+                    //si hay mas de un tipo de mensaje establecido retornar exception
                     if (trueFound > 1)
                     {
-                        throw new Exception("Sólo debe especificar un tipo de mensaje.");
+                        //no puede definir mas de un tipo de mensaje por envio
+                        throw new Exception("No more than one type of message defined");
                     }
                 }
+                //si no hay ningun tipo definido de mensaje retornar exception
                 if (trueFound == 0)
                 {
-                    throw new Exception("Débe especificar el tipo de mensaje");
+                    //debe definir solo un tipo de mensaje
+                    throw new Exception("you must define only one type of message");
                 }
 
+                //si se ha definido la captura de mensajes y se a capturado un mensaje.
                 if (_logMessage && message)
                 {
+                    //si seestablece salida por consola = true
                     if (_logToConsole)
                     {
                         LogMessageToConsole(messageText, 1, "Mensaje");
                     }
+                    //si se establece salida por archivo.txt = true
                     if(_logToFile)
                     {
                         LogMessageToFile(messageText, 1, "Mensaje");
                     }
+                    //si se establece salida por base de datos = true
                     if(_logToDatabase)
                     {
                         LogMessageToDataBase(messageText, message, warning, error);
@@ -134,20 +143,32 @@ namespace examTest1
             catch (Exception e )
             {
                 Console.WriteLine(e.Message);
+                throw new Exception(e.Message);
             }
 
         }
 
-
+        /**
+         * Envia el mensaje de Log a la base de datos
+         * DB = examTest1
+         * Table = log
+         */
         public static void LogMessageToDataBase(string messageText, bool message, bool warning, bool error)
         {
             try
             {
-                string strConexion = System.Configuration.ConfigurationManager.AppSettings["ConnectionString"];
-                NpgsqlConnection conn = new NpgsqlConnection("Host=localhost;Username=postgres;Password=postgres;Database=examTest1");
+                if(!message && !error && !warning) { throw new Exception("you must define only one type of message");  }
+                //establecer conexion desde string de conexion en appsettings
+                string strconexion = System.Configuration.ConfigurationManager.AppSettings["connectionstring"];
+                //establecer la conexion
+                NpgsqlConnection conn = new NpgsqlConnection(strconexion);
+                //enviar sql Insert
                 NpgsqlCommand cmd = new NpgsqlCommand("insert into log(message, type_message, type_warning, type_error,created) VALUES('"+ messageText + "', "+ message +", "+ warning +", "+ error +", now())", conn);
+                //abrir la conexion 
                 conn.Open();
+                //ejecutar la query 
                 cmd.ExecuteNonQuery(); 
+                //cerrar la conexion
                 conn.Close();
             }
             catch (Exception e)
@@ -156,23 +177,50 @@ namespace examTest1
             }
         }
 
-        private static void LogMessageToFile(string messageText, int type, string typeName)
+
+        /**
+         * Envia el mensaje de log a un archivo .txt
+         */
+        public  static void LogMessageToFile(string messageText, int type, string typeName)
         {
             try
             {
+                //comprobar maximos y minimos
+                if (!(type>0) || (type>3))
+                {
+                    throw new Exception("El tipo debe ser mayor que 0 y menor que 4");
+                }
+                //comprobar texto no vacio
+                if (messageText.Trim().Length==0)
+                {
+                    throw new Exception("El Mensaje esta vacío");
+                }
+                //comprobar texto no vacio
+                if (typeName.Trim().Length==0)
+                {
+                    throw new Exception("El Nombre Mensaje esta vacío");
+                }
+                //obtiene la direccion del directorio o carpeta donde se almacenaran los logs.txt
                 string folderPath = System.Configuration.ConfigurationManager.AppSettings["LogFileDirectory"];
+                //ubicacion del archivo .txt donde se escribiran los logs
                 string archivoLog = System.Configuration.ConfigurationManager.AppSettings["LogFileDirectory"] + "LogFile_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt";
+                //comprobar si no existe el archivo 
                 if (!System.IO.File.Exists(archivoLog))
                 {
+                    //comprobar si no existe el directorio logs
                     if (!System.IO.Directory.Exists(folderPath))
                     {
+                        //si no exite se crea el directorio
                        System.IO.Directory.CreateDirectory(folderPath);
                     }
+                    //se crea el archivo de texto
                     StreamWriter archivo = File.CreateText(archivoLog);
+                    //se cierra el archivo
                     archivo.Close();
                     //System.IO.File.Create(archivoLog);
                 }
                 //string l = System.IO.File.ReadAllText(archivoLog);
+                //se agrega una nueva linea al archivo
                 File.AppendAllText(archivoLog,  DateTime.Now.ToShortDateString() + " " + typeName + " " + messageText + Environment.NewLine);
             }
             catch (Exception e)
@@ -182,11 +230,18 @@ namespace examTest1
             
         }
 
+        /**
+         * envia el mensaje log por consola, cambiando el color segun el tipo de mensaje. 
+         */
         public static void LogMessageToConsole(string menssageText, int type, string typeName)
         {
             try
             {
-
+                //comrpobar type no es 0
+                if (!(type > 0)) { throw new Exception("El tipo debe ser mayor a 0"); }
+                //comprobar typename no esta vacio
+                if (typeName.Trim().Length == 0) { throw new Exception("El el nombre no puede ser vacio"); }
+                //establecer segun tipo, el color del texto que saldrá por consola
                 if (type==1)
                 {
                     Console.ForegroundColor = ConsoleColor.White;
@@ -199,7 +254,7 @@ namespace examTest1
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                 }
-
+                //escribe por consola el mensaje
                 Console.WriteLine(DateTime.Now.ToShortDateString().Replace("/", "-")+ " [" + typeName + "]" + " " + menssageText );
 
             }

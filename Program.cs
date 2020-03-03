@@ -10,29 +10,16 @@ namespace examTest1
     {
         static void Main(string[] args)
         {
-            //DataBase db = new DataBase();
-            //Console.WriteLine("Hola");
-            //Console.WriteLine(db.Open().ToString());
+            //por defecto envia un mensaje de error
 
+             JobLogger log = new JobLogger(true, true, true,      false, false,true);
 
-            
-             JobLogger log = new JobLogger(true, true, true,      true, true, true);
-
-             JobLogger.LogMessage("Este es un mensaje de Error", false, true, false);
+             JobLogger.LogMessage("Error Message Test", false, false, true);
              
-            //string archivoLog = System.Configuration.ConfigurationManager.AppSettings["LogFileDirectory"] + "LogFile_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt";
-
-            //System.IO.Directory.CreateDirectory("C:/Logs/" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt");
-            //System.IO.File.AppendText("C:/Logs/" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt");
 
             
         }
 
-        //string carpeta = System.Configuration.ConfigurationManager.AppSettings["LogFileDirectory"] + "LogFile_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt";
-        //Console.WriteLine(System.IO.File.Exists(carpeta));
-
-
-        //Console.WriteLine("se ha guardado correctamente");
 
     }
 
