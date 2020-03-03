@@ -20,9 +20,10 @@ namespace examTest1
         private static bool _logWarning;
         private static bool _logError;
         private static bool _logToDatabase;
+        private static bool _initialized=false;
         #endregion
 
-        
+
         #region Metodos
         public JobLogger(bool logToFile, bool logToConsole, bool logToDatabase, bool logMessage, bool logWarning, bool logError)
         {
@@ -43,6 +44,7 @@ namespace examTest1
                 {
                     throw new Exception("Message Type not defined");
                 }
+                _initialized = true;
             }
             catch (Exception e)
             {
@@ -56,6 +58,10 @@ namespace examTest1
         {
             try
             {
+                if (!_initialized)
+                {
+                    throw new Exception("Not initialized");
+                }
                 if (messageText == null || messageText.Trim().Length == 0)
                 {
                     //no puede dejar el mensaje vacio 
@@ -157,7 +163,11 @@ namespace examTest1
         {
             try
             {
-                if(!message && !error && !warning) { throw new Exception("you must define only one type of message");  }
+                if (!_initialized)
+                {
+                    throw new Exception("Not initialized");
+                }
+                if (!message && !error && !warning) { throw new Exception("you must define only one type of message");  }
                 //establecer conexion desde string de conexion en appsettings
                 string strconexion = System.Configuration.ConfigurationManager.AppSettings["connectionstring"];
                 //establecer la conexion
@@ -185,20 +195,24 @@ namespace examTest1
         {
             try
             {
+                if (!_initialized)
+                {
+                    throw new Exception("Not initialized");
+                }
                 //comprobar maximos y minimos
                 if (!(type>0) || (type>3))
                 {
-                    throw new Exception("El tipo debe ser mayor que 0 y menor que 4");
+                    throw new Exception("type >0 and <4");
                 }
                 //comprobar texto no vacio
                 if (messageText.Trim().Length==0)
                 {
-                    throw new Exception("El Mensaje esta vacío");
+                    throw new Exception("Message cant be empty");
                 }
                 //comprobar texto no vacio
                 if (typeName.Trim().Length==0)
                 {
-                    throw new Exception("El Nombre Mensaje esta vacío");
+                    throw new Exception("TypeName cant be empty");
                 }
                 //obtiene la direccion del directorio o carpeta donde se almacenaran los logs.txt
                 string folderPath = System.Configuration.ConfigurationManager.AppSettings["LogFileDirectory"];
@@ -237,6 +251,10 @@ namespace examTest1
         {
             try
             {
+                if (!_initialized)
+                {
+                    throw new Exception("Not initialized");
+                }
                 //comrpobar type no es 0
                 if (!(type > 0)) { throw new Exception("El tipo debe ser mayor a 0"); }
                 //comprobar typename no esta vacio
