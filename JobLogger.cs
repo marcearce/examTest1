@@ -51,7 +51,6 @@ namespace examTest1
                 Console.WriteLine(e.Message);
                 throw new Exception(e.Message);
             }
-
             
         }
         public  static void LogMessage(string messageText, bool message, bool warning, bool error)
